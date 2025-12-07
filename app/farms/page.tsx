@@ -32,7 +32,7 @@ export default function Farms() {
     }
 
     const handleDeleteFarm = (farmId: string) => {
-        const updatedFarms = farms.filter(f => f.id !== farmId)
+        const updatedFarms = farms.filter(f => f._id !== farmId)
         setFarms(updatedFarms)
         localStorage.setItem('poultryFarms', JSON.stringify(updatedFarms))
     }

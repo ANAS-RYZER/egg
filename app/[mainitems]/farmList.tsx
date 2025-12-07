@@ -33,13 +33,13 @@ export default function FarmsList({
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {farms.map((farm) => (
         <Card
-          key={farm.id}
+          key={farm._id}
           className={`cursor-pointer border-2 transition-all hover:shadow-md ${
-            selectedFarm === farm.id
+            selectedFarm === farm._id
               ? 'border-emerald-500 bg-emerald-50'
               : 'border-emerald-200 hover:border-emerald-300'
           }`}
-          onClick={() => onSelectFarm(farm.id)}
+          onClick={() => onSelectFarm(farm._id)}
         >
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between">
@@ -52,7 +52,7 @@ export default function FarmsList({
                 size="sm"
                 onClick={(e) => {
                   e.stopPropagation()
-                  onDeleteFarm(farm.id)
+                  onDeleteFarm(farm._id)
                 }}
                 className="text-red-600 hover:bg-red-50"
               >

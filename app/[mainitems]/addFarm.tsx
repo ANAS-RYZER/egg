@@ -46,7 +46,7 @@ export default function AddFarmForm({ onAddFarm, isLoading = false }: AddFarmFor
     }
 
     const newFarm: FarmData = {
-      id: '',
+      _id: '',
       farmName: formData.farmName,
       location: formData.location,
       totalSheds: parseInt(formData.totalSheds),
