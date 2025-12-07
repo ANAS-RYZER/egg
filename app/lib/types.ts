@@ -2,7 +2,7 @@ export interface ProductionRecord {
     id: string
     farmId: string
     date: string
-    shedNo: string
+    shedNo: number
     age: number
     mortality: number
     openingStock: number
@@ -12,11 +12,13 @@ export interface ProductionRecord {
     createdAt: string
   }
   
-  export interface FarmData {
-    id: string
+export interface FarmData {
+    _id: string
     farmName: string
     location: string
     totalSheds: number
+    capacity: number
+    type: 'layer' | 'broiler' | 'breeder'
     ownerName?: string
     createdDate: string
     records?: ProductionRecord[]

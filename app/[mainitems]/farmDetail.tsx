@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { FarmData, ProductionRecord } from '../lib/types'
 import AddRecordForm from './addRecordFarm'
 import RecordsTable from './recordTable'
+import useAddRecord from '../hooks/farms/useAddRecord'
 
 interface FarmDetailsProps {
   farm: FarmData
@@ -16,10 +17,17 @@ interface FarmDetailsProps {
 export default function FarmDetails({ farm, onUpdateRecords }: FarmDetailsProps) {
   const [showAddRecord, setShowAddRecord] = useState(false)
 
-  const handleAddRecord = (record: ProductionRecord) => {
-    const updatedRecords = [...(farm.records || []), record]
-    onUpdateRecords(updatedRecords)
-    setShowAddRecord(false)
+  const { addRecord, loading, error } = useAddRecord()
+
+  const handleAddRecord = async (record: ProductionRecord) => {
+    try {
+      await addRecord(farm._id, record)
+      setShowAddRecord(false)
+      // Trigger refresh in parent
+      onUpdateRecords([...(farm.records || []), record])
+    } catch (err) {
+      console.error("Failed to add record", err)
+    }
   }
 
   const handleDeleteRecord = (index: number) => {
@@ -30,15 +38,27 @@ export default function FarmDetails({ farm, onUpdateRecords }: FarmDetailsProps)
   return (
     <div className="space-y-6">
       {/* Farm Info Card */}
-      <Card className="border-emerald-200 bg-gradient-to-r from-emerald-50 to-green-50">
-        <CardHeader>
-          <CardTitle className="text-emerald-700">{farm.farmName}</CardTitle>
-          <CardDescription>Farm Information</CardDescription>
+      <Card className="border-0 shadow-xl bg-white/95 backdrop-blur-sm">
+        <CardHeader className="pb-2">
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle className="text-2xl text-gray-900">{farm.farmName}</CardTitle>
+              <CardDescription>Farm Information</CardDescription>
+            </div>
+            <div className="bg-emerald-100 px-3 py-1 rounded-full">
+              <span className="text-emerald-700 text-sm font-medium capitalize">{farm.type} Farm</span>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
             <p className="text-sm text-gray-600">Location</p>
             <p className="font-semibold text-black">{farm.location}</p>
+          </div>
+
+          <div>
+            <p className="text-sm text-gray-600">Capacity</p>
+            <p className="font-semibold text-black">{farm.capacity?.toLocaleString()} Birds</p>
           </div>
           <div>
             <p className="text-sm text-gray-600">Total Sheds</p>
@@ -75,7 +95,7 @@ export default function FarmDetails({ farm, onUpdateRecords }: FarmDetailsProps)
           {showAddRecord && (
             <div className="mb-6 p-4 bg-emerald-50 rounded-lg border border-emerald-200">
               <AddRecordForm
-                farmId={farm.id}
+                farmId={farm._id}
                 totalSheds={farm.totalSheds}
                 onAddRecord={handleAddRecord}
               />
@@ -122,7 +142,7 @@ function Analytics({ records }: { records: ProductionRecord[] }) {
   const avgMortality = (
     records.reduce((sum, r) => sum + (r.mortality || 0), 0) / totalRecords
   ).toFixed(2)
-  
+
   const avgFoodConsumed = (
     records.reduce((sum, r) => sum + (r.gramsOfFoodPerHen || 0), 0) / totalRecords
   ).toFixed(2)

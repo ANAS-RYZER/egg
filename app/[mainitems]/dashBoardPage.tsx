@@ -1,143 +1,156 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { LogOut, Plus } from 'lucide-react'
-import FarmsList from './farmList'
+import { Plus, ArrowRight, MapPin, Activity } from 'lucide-react'
 import AddFarmForm from './addFarm'
-import FarmDetails from './farmDetail'
 import { FarmData } from '../lib/types'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 
 interface DashboardPageProps {
   onLogout: () => void
 }
 
+import useAddFarm from '../hooks/farms/useAddFarm'
+import useFarms from '../hooks/farms/useFarms'
+
+
 export default function DashboardPage({ onLogout }: DashboardPageProps) {
-  const [farms, setFarms] = useState<FarmData[]>([])
-  const [selectedFarm, setSelectedFarm] = useState<string | null>(null)
-  const [showAddForm, setShowAddForm] = useState(false)
-  const [activeTab, setActiveTab] = useState('overview')
+  const router = useRouter()
+  const [showAddDialog, setShowAddDialog] = useState(false)
 
-  // Load farms from localStorage
-  useEffect(() => {
-    const savedFarms = localStorage.getItem('poultryFarms')
-    if (savedFarms) {
-      setFarms(JSON.parse(savedFarms))
-    }
-  }, [])
+  const { farms, loading: isLoadingFarms, refetch: refetchFarms } = useFarms()
+  const { addFarm, loading: isAdding, error: addError } = useAddFarm()
 
-  // Save farms to localStorage
-  useEffect(() => {
-    localStorage.setItem('poultryFarms', JSON.stringify(farms))
-  }, [farms])
-
-  const handleLogout = () => {
-    localStorage.removeItem('poultryFarmLoggedIn')
-    localStorage.removeItem('adminEmail')
-    onLogout()
-  }
-
-  const handleAddFarm = (newFarm: FarmData) => {
-    const farm = {
-      ...newFarm,
-      id: Date.now().toString(),
-    }
-    setFarms([...farms, farm])
-    setShowAddForm(false)
-  }
-
-  const handleDeleteFarm = (farmId: string) => {
-    setFarms(farms.filter(f => f.id !== farmId))
-    if (selectedFarm === farmId) {
-      setSelectedFarm(null)
+  const handleAddFarm = async (newFarm: FarmData) => {
+    try {
+      await addFarm(newFarm)
+      await refetchFarms() // Refresh the list after adding
+      setShowAddDialog(false)
+    } catch (error) {
+      console.error("Failed to add farm:", error)
     }
   }
 
-  const handleUpdateFarmRecords = (farmId: string, records: any[]) => {
-    setFarms(farms.map(farm => 
-      farm.id === farmId ? { ...farm, records } : farm
-    ))
+  const handleViewFarm = (farmId: string) => {
+    router.push(`/farm/${farmId}`)
   }
 
-  const selectedFarmData = farms.find(f => f.id === selectedFarm)
+
+  console.log(farms , "farms")
+
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50">
-      {/* Header */}
-      <header className="bg-white border-b border-emerald-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-emerald-700">🐔 Poultry Farm Management</h1>
-            <p className="text-gray-600 text-sm">Track egg production and farm performance</p>
-          </div>
-          <Button
-            variant="outline"
-            onClick={handleLogout}
-            className="border-emerald-200 text-emerald-700 hover:bg-emerald-50"
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            Logout
-          </Button>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6 bg-white border border-emerald-200">
-            <TabsTrigger value="overview" className="data-[state=active]:bg-emerald-100">
-              All Farms
-            </TabsTrigger>
-            <TabsTrigger value="details" className="data-[state=active]:bg-emerald-100" disabled={!selectedFarm}>
-              Farm Details
-            </TabsTrigger>
-            <TabsTrigger value="add" className="data-[state=active]:bg-emerald-100">
-              Add New Farm
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-4">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-2xl font-bold text-black">My Farms</h2>
-                <p className="text-gray-600">Total farms: {farms.length}</p>
-              </div>
+    <div className="min-h-screen bg-gray-50/50">
+      {/* Hero Section */}
+      <div className="bg-linear-to-r from-emerald-600 to-teal-600 text-white pb-20 pt-10 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div>
+              <h2 className="text-3xl font-bold text-white">Dashboard</h2>
+              <p className="text-emerald-100 mt-2 text-lg">Manage your poultry operations efficiently</p>
             </div>
-            <FarmsList
-              farms={farms}
-              selectedFarm={selectedFarm}
-              onSelectFarm={(farmId) => {
-                setSelectedFarm(farmId)
-                setActiveTab('details')
-              }}
-              onDeleteFarm={handleDeleteFarm}
-            />
-          </TabsContent>
 
-          {/* Details Tab */}
-          <TabsContent value="details" className="space-y-4">
-            {selectedFarmData ? (
-              <FarmDetails
-                farm={selectedFarmData}
-                onUpdateRecords={(records) => handleUpdateFarmRecords(selectedFarmData.id, records)}
-              />
-            ) : (
-              <Card>
-                <CardContent className="pt-6 text-center text-gray-500">
-                  Select a farm from the overview to view details
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                onClick={onLogout}
+                className="bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white backdrop-blur-sm"
+              >
+                Logout
+              </Button>
+              <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+                <DialogTrigger asChild>
+                  <Button className="bg-black text-emerald-700 hover:bg-emerald-50 shadow-lg border-0 font-semibold">
+                    <Plus className="w-5 h-5 mr-2" />
+                    Add New Farm
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[600px]">
+                  <DialogHeader>
+                    <DialogTitle>Add New Farm</DialogTitle>
+                  </DialogHeader>
+                  <AddFarmForm onAddFarm={handleAddFarm} isLoading={isAdding} />
+                </DialogContent>
+              </Dialog>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 -mt-10">
+        {isLoadingFarms ? (
+          <div className="flex items-center justify-center py-20 bg-white/80 backdrop-blur-sm rounded-xl shadow-xl">
+            <div className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : farms?.length === 0 ? (
+          <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+            <CardContent className="flex flex-col h-[400px] items-center justify-center py-20 text-center">
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">No farms added yet</h3>
+              <p className="text-gray-500 max-w-md mx-auto mb-8 text-lg">
+                Get started by adding your first poultry farm to track production, manage sheds, and monitor performance.
+              </p>
+              <Button
+                onClick={() => setShowAddDialog(true)}
+                size="lg"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 h-12 text-lg shadow-emerald-200 shadow-lg"
+              >
+                Add Your First Farm
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {farms?.map((farm) => (
+              <Card
+                key={farm._id}
+                className="group hover:shadow-xl transition-all duration-300 border-emerald-100 cursor-pointer overflow-hidden"
+                onClick={() => router.push(`/farm/${farm._id}`)}
+              >
+                <div className="h-2 bg-emerald-500 w-full" />
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <CardTitle className="text-xl text-gray-900 mb-1">{farm.farmName}</CardTitle>
+                      <CardDescription className="flex items-center gap-1">
+                        <MapPin className="w-3 h-3" />
+                        {farm.location}
+                      </CardDescription>
+                    </div>
+                    <div className="bg-emerald-50 p-2 rounded-lg group-hover:bg-emerald-100 transition-colors">
+                      <ArrowRight className="w-4 h-4 text-emerald-600" />
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4 mt-2">
+                    <div className="bg-gray-50 p-3 rounded-lg">
+                      <p className="text-xs text-gray-500 uppercase font-semibold">Total Sheds</p>
+                      <p className="text-lg font-bold text-gray-900">{farm?.totalSheds?.toLocaleString() || 0}</p>
+                    </div>
+                    <div className="bg-gray-50 p-3 rounded-lg">
+                      <p className="text-xs text-gray-500 uppercase font-semibold">Owner NAME</p>
+                      <p className="text-lg font-bold text-gray-900 capitalize">{farm.ownerName}</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between text-sm text-gray-500">
+                    <span className="flex items-center gap-1">
+                      <Activity className="w-4 h-4 text-emerald-500" />
+                      Active
+                    </span>
+                    <span>
+                      View Details
+                    </span>
+                  </div>
                 </CardContent>
               </Card>
-            )}
-          </TabsContent>
-
-          {/* Add Farm Tab */}
-          <TabsContent value="add">
-            <AddFarmForm onAddFarm={handleAddFarm} />
-          </TabsContent>
-        </Tabs>
-      </main>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

@@ -1,38 +1,28 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import LoginPage from './[mainitems]/loginpage'
-import DashboardPage from './[mainitems]/dashBoardPage'
 
 export default function Home() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
+  const router = useRouter()
 
   useEffect(() => {
+    // Check authentication and redirect
     const loggedIn = localStorage.getItem('poultryFarmLoggedIn') === 'true'
-    setIsLoggedIn(loggedIn)
-    setIsLoading(false)
-  }, [])
+    if (loggedIn) {
+      router.push('/dashboard')
+    } else {
+      router.push('/login')
+    }
+  }, [router])
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-black">Loading...</p>
-        </div>
-      </div>
-    )
-  }
-
+  // Loading state while redirecting
   return (
-    <div>
-      {isLoggedIn ? (
-        <DashboardPage onLogout={() => setIsLoggedIn(false)} />
-      ) : (
-        <LoginPage onLoginSuccess={() => setIsLoggedIn(true)} />
-      )}
+    <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="text-center">
+        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p className="text-gray-600">Redirecting...</p>
+      </div>
     </div>
   )
 }

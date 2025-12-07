@@ -41,7 +41,7 @@ export default function RecordsTable({ records, onDeleteRecord }: RecordsTablePr
               <TableCell className="font-medium">
                 {new Date(record.date).toLocaleDateString()}
               </TableCell>
-              <TableCell>{record.shedNo}</TableCell>
+              <TableCell>Shed {record.shedNo}</TableCell>
               <TableCell>{record.age}</TableCell>
               <TableCell>{record.openingStock}</TableCell>
               <TableCell>

@@ -6,12 +6,14 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { AlertCircle } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useRouter } from 'next/navigation'
 
 interface LoginPageProps {
-  onLoginSuccess: () => void
+  onLoginSuccess: (email: string, password: string) => Promise<void>
 }
 
 export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
+  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -19,19 +21,20 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
     setIsLoading(true)
+    setError('')
 
-    // Simple authentication - demo credentials
-    if (email === 'admin@farm.com' && password === 'admin123') {
-      localStorage.setItem('poultryFarmLoggedIn', 'true')
-      localStorage.setItem('adminEmail', email)
-      onLoginSuccess()
-    } else {
-      setError('Invalid credentials. Use admin@farm.com / admin123')
+    try {
+      await onLoginSuccess(email, password)
+      router.push('/dashboard')
+    } catch (err) {
+      console.error("Login error in component:", err)
+      setError("An error occurred during login")
+    } finally {
+      setIsLoading(false)
     }
-    setIsLoading(false)
   }
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-50 p-4">

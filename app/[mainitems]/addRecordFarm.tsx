@@ -55,7 +55,7 @@ export default function AddRecordForm({
       id: Date.now().toString(),
       farmId,
       date: formData.date,
-      shedNo: formData.shedNo,
+      shedNo: parseInt(formData.shedNo),
       age: parseInt(formData.age),
       mortality: parseInt(formData.mortality) || 0,
       openingStock: parseInt(formData.openingStock),
@@ -104,7 +104,7 @@ export default function AddRecordForm({
             </SelectTrigger>
             <SelectContent>
               {Array.from({ length: totalSheds }, (_, i) => (
-                <SelectItem key={i + 1} value={`Shed ${i + 1}`}>
+                <SelectItem key={i + 1} value={`${i + 1}`}>
                   Shed {i + 1}
                 </SelectItem>
               ))}
@@ -182,7 +182,7 @@ export default function AddRecordForm({
 
         {/* Grams of Food Per Hen */}
         <div className="space-y-1">
-            <label className="text-xs font-medium text-black">Food/Hen (g)</label>
+          <label className="text-xs font-medium text-black">Food/Hen (g)</label>
           <Input
             type="number"
             step="0.1"
